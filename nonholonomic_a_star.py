@@ -4,14 +4,11 @@ import cv2
 import time
 import os
 import math
-import cv2 
 
-# Fucntion to create the grid space
-def createGrid(height, width, bounding_location, padding = 0, wall_padding = 0, travel_padding = 0, scale = 1):
+
+# Function to create the grid space
+def createGrid(height, width, bounding_location, padding = 0, wall_padding = 0, scale = 1):
   image = np.full((height, width, 3), 255, dtype=np.uint8)
-
-  if travel_padding > 0:
-    image = setTravelPadding(image, travel_padding, bounding_location, scale, 180)
 
   if wall_padding > 0:
     image = setWallPadding(image, wall_padding, 125)
@@ -25,17 +22,9 @@ def createGrid(height, width, bounding_location, padding = 0, wall_padding = 0, 
   grid[gray == 125] = -12
   grid[gray == 180] = -15
   grid[gray == 0] = -11
-  grid = grid.reshape(-1)
+  grid = grid.flatten()
   return grid, gray
 
-# Function to add padding for step size
-def setTravelPadding(image, padding, obstacles, scale, value):
-  for obstacle in obstacles:
-    obstacle = np.array(obstacle, dtype=np.int32) * scale
-    for point in obstacle:
-      cv2.circle(image, point, padding, (value, value, value), -1)
-  
-  return image
 
 # Function to add padding for walls
 def setWallPadding(image, padding, value):
@@ -50,43 +39,57 @@ def setWallPadding(image, padding, value):
     cv2.rectangle(image, points[i], points[i+1], (value, value, value), -1)
   return image
 
+
 # Function to add obstacles and their padding
 def setObstaclesAndTruePadding(image, bounding_location, padding, scale, value):
   if padding > 0:
     doPadding = True
-    paddings = [
-        [padding, padding],
-                [-padding, -padding],
-     [padding, -padding],
-      [-padding, padding],
-                [0, padding],
-                [0, -padding],
-                [padding, 0],
-                [-padding, 0]
-                ]
-
 
   for obstacle in bounding_location:
     obstacle = np.array(obstacle, dtype=np.int32) * scale
-    if len(obstacle) == 2:
-      if doPadding:
-        for pad in paddings:
-          cv2.rectangle(image, (obstacle[0][0] - pad[0], obstacle[0][1] - pad[1]), (obstacle[1][0] + pad[0], obstacle[1][1] + pad[1]), (value, value, value), -1)
-        points = [(obstacle[0][0], obstacle[0][1]), (obstacle[1][0], obstacle[1][1]), ( obstacle[0][0], obstacle[1][1]), ( obstacle[1][0],  obstacle[0][1])]
-        for point in points:
-          cv2.circle(image, point, padding, (value, value, value), -1)
-      cv2.rectangle(image, obstacle[0], obstacle[1], (0, 0, 0), -1)
+    obstacle = obstacle.astype(np.int32)
+    if len(obstacle) == 1: # Check again later
+      cv2.circle(image, (obstacle[0][0], obstacle[0][1]), obstacle[0][2] + padding, (value, value, value), -1)
+      cv2.circle(image, (obstacle[0][0], obstacle[0][1]), obstacle[0][2], (0, 0, 0), -1)
     else:
       if doPadding:
-        for pad in paddings:
-          length = len(obstacle)
-          arrr = np.full((length, 2), pad)
-          cv2.fillPoly(image, pts=[np.subtract(obstacle, arrr)], color=(value, value, value))
+        x_small = x_big = y_small = y_big = -1
+        for point in obstacle:
+          if x_small > point[0] or x_small == -1:
+            x_small = point[0]
+          if x_big < point[0] or x_big == -1:
+            x_big = point[0]
+          if y_small > point[1] or y_small == -1:
+            y_small = point[1]
+          if y_big < point[1] or y_big == -1:
+            y_big = point[1]
+          cv2.circle(image, tuple((np.array(point))), padding, (value, value, value), -1)
+
+        if x_small - padding > 0:
+          x_small -= padding
+        else:
+          x_small = 0
+        if x_big + padding < width:
+          x_big += padding
+        else:
+          x_big = width
+        if y_small - padding > 0:
+          y_small -= padding
+        else:
+          y_small = 0
+        if y_big + padding < height:
+          y_big += padding
+        else:
+          y_big = height
+        new_points = np.array([[x_small, y_small], [x_small, y_big], [x_big, y_big], [x_big, y_small]])
+        cv2.fillPoly(image, pts=[new_points], color=(value, value, value))
+
         for point in obstacle:
           cv2.circle(image, tuple((np.array(point))), padding, (value, value, value), -1)
       cv2.fillPoly(image, pts=[obstacle], color=(0, 0, 0))
 
   return image
+
 
 # Function to calculate Euclidean distance
 def heuristic(node, goal):
@@ -97,65 +100,93 @@ def heuristic(node, goal):
 # Set initial variables
 start = time.time()
 
-unscaled_robot_radius = int(input("\nEnter the robot radius:"))
 unscaled_clearance = int(input("\nEnter the obstacle clearance:"))
-unscaled_height = 500
-unscaled_width = 1200
+unscaled_robot_radius = 220
+unscaled_robot_width = 287
+unscaled_height = 2000
+unscaled_width = 6000
 unscaled_effective_padding = unscaled_robot_radius + unscaled_clearance
 
-scale = 1 # test scale to see speed of iteration, (9 is like 0.0966 and 0.088)
+wheel_radius = 33
+wheel_dist = 287
 
-height = unscaled_height * scale # y size
-width = unscaled_width * scale # x size
-effective_padding = unscaled_effective_padding * scale
-travel_dist = int(input("\nEnter step size:"))
-goal_threshold = 1.5
-padding = int(((travel_dist * (3 - (3)**0.5)/4) + (unscaled_effective_padding)) * scale)
-angles = [ 60, 30, 0, -30, -60 ]
-angle_indices = {
-  0 : 0,
-  30 : 1,
-  60 : 2,
-  90 : 3,
-  120 : 4,
-  150 : 5,
-  180 : 6,
-  210 : 7,
-  240 : 8,
-  270 : 9,
-  300 : 10,
-  330 : 11,
-}
+scale = 1/2
+
+height = int(unscaled_height * scale) # y size
+width = int(unscaled_width * scale) # x size
+robot_radius = unscaled_robot_radius * scale
+robot_width = unscaled_robot_width * scale
+
+non_round_pad = unscaled_effective_padding * scale
+effective_padding = math.ceil(non_round_pad)
+
+rpm1 = int(int(input("\nEnter first RPM:")))
+rpm2 = int(int(input("\nEnter second RPM:")))
+dt = 0.1
+tt = 1
+
+
+if rpm1 > rpm2:
+  bigger = rpm1
+  smaller = rpm2
+else:
+  bigger = rpm2
+  smaller = rpm1
+
+goal_threshold = robot_radius / 2
+
+# (left, right)
+actions = [
+    (0, bigger),
+    (bigger, 0),
+    (bigger, bigger),
+    (0, smaller),
+    (smaller, 0),
+    (smaller, smaller),
+    (bigger, smaller),
+    (smaller, bigger),
+]
+
 timestep = 0
 
 last_explored = last_explored_speed = -1
 
-recording = True
+recording = False
 
 obstacle_file_path = ""
 
 obstacle_bounding_boxes = [
-    # [[175, 100], [100, 500] ], [[275, 400], [350, 0]],
-    [(100, 100), (100, 500), (175, 500), (175, 100)],
-    [(275, 0), (275, 400), (350, 400), (350, 0)],
-    [[650 - (75*(3**0.5)), 325], [650 - (75*(3**0.5)), 175], [650, 100], [650 + (75*(3**0.5)), 175], [650 + (75*(3**0.5)), 325], [650, 400]],
-    [[900, 450], [1100, 450], [1100, 50], [900, 50], [900, 125], [1020, 125], [1020, 375], [900, 375]],
+    [(1500, 2000), (1500, 1000), (1750, 1000),  (1750, 2000)],
+    [(2500, 1000), (2500, 0), (2750, 0), (2750, 1000)],
+    [(4200, 1200, 600)],
     ]
 
+circle_radius = 600 * scale
+circle_x = 4200 * scale
+circle_y = 1200 * scale
+
+rect1_x_low = (1500 * scale) - non_round_pad
+rect1_x_high = (1750 * scale) + non_round_pad
+rect1_y_low = (1000 * scale) - non_round_pad
+rect1_y_high = 2000 * scale
+
+rect2_x_low = (2500 * scale) - non_round_pad
+rect2_x_high = (2750 * scale) + non_round_pad
+rect2_y_low = 0
+rect2_y_high = (1000 * scale) + non_round_pad
 
 open = PriorityQueue()
 visited = []
+visited_steps = []
 
 if os.path.exists(obstacle_file_path) and os.path.isfile(obstacle_file_path):
   pass
 else:
   grid, useless = createGrid(height, width, obstacle_bounding_boxes, effective_padding, effective_padding, padding, scale)
+  # grid = np.full((height*width), 5*height*width)
   backtrack_grid = np.full((height*width), -1)
-
-if travel_dist < 2:
-   travel_dist = 2
-elif travel_dist > 30:
-   travel_dist = 30
+  backtrack_action = np.full((height*width), -1)
+  backtrack_path = np.full((height*width), -1)
 
 end = time.time()
 print(end - start)
@@ -165,16 +196,13 @@ precision = False
 # Get starting position
 valid = False
 while not valid:
-  starting_x = int(input("\nEnter starting x position:")) * scale
-  starting_y = int(input("\nEnter starting y position:")) * scale
+  starting_x = int(int(input("\nEnter starting x position:")) * scale)
+  starting_y = int(int(input("\nEnter starting y position:")) * scale)
   starting_theta = int(input("\nEnter starting theta position:")) % 360
 
   current_pos = starting_x + (width * starting_y)
   try:
     if grid[current_pos] == 5 * height * width:
-      if not starting_theta % 30 == 0:
-        print("\nInvalid angle input")
-        continue
       grid[current_pos] = 0
       valid = True
     else:
@@ -186,113 +214,116 @@ while not valid:
 # Get goal position
 valid = False
 while not valid:
-  goal_x = int(input("\nEnter goal x position:")) * scale
-  goal_y = int(input("\nEnter goal y position:")) * scale
+  goal_x = int(int(input("\nEnter goal x position:")) * scale)
+  goal_y = int(int(input("\nEnter goal y position:")) * scale)
   goal_index = goal_x + (width * goal_y)
-  goal_theta = int(input("\nEnter goal theta position:")) % 360
 
   try:
     if grid[goal_index] == 5 * height * width:
-      if not goal_theta % 30 == 0:
-        print("\nInvalid goal angle")
-        continue
       valid = True
     else:
       print("\nGoal position invalid, obstacle exists, Enter again\n")
+
   except:
     print("\nGoal position invalid, obstacle exists, Enter again\n")
 
 
+# Setup costs of each action
+costs = [0 for i in range(len(actions))]
+
+for i, action in enumerate(actions):
+  old_x = 0
+  old_y = 0
+  new_theta = starting_theta
+  for j in range(int(tt/dt)):
+    new_theta += ((action[1] - action[0]) * math.pi * dt * wheel_radius / (unscaled_robot_width * 60))
+    new_x = old_x + ((action[0] + action[1]) * math.cos(new_theta)) * math.pi * dt * wheel_radius * scale / (60)
+    new_y = old_y + ((action[0] + action[1]) * math.sin(new_theta)) *math.pi * dt * wheel_radius * scale / (60)
+
+    costs[i] += heuristic((old_x, old_y), (new_x, new_y))
+
+    old_x = new_x
+    old_y = new_y
+
+
+
+stop_condition = 2
+
+visit_count = 0
+
+
 # Start A*
-open.put(( heuristic((starting_x, starting_y), (goal_x, goal_y)), current_pos, starting_theta))
+open.put(( heuristic((starting_x, starting_y), (goal_x, goal_y)), -1, current_pos, starting_theta))
+
+goal_distance = goal_threshold + 1
 
 goal_found = False
 start = time.time()
-while not open.empty() and not goal_found:
-    current_cost, current_pos, current_theta = open.get()
+while not open.empty():
+    current_cost, current_action, current_pos, current_theta = open.get()
 
-    # Condition to perform optimal path finding with angle
-    if precision:
-        if not grid[angle_indices[current_theta], current_pos] == -13:
-            timestep += 1
-            grid[angle_indices[current_theta], current_pos] = -13
+    if not grid[current_pos] == -13:
+        timestep += 1
+        grid[current_pos] = -13
 
-            x_pos = int(current_pos % width)
-            y_pos = int((current_pos - (current_pos % width))/width)
-            current_distance = heuristic((x_pos, y_pos), (goal_x, goal_y))
+        x_pos = int(current_pos % width)
+        y_pos = int((current_pos - (current_pos % width))/width)
+        current_distance = heuristic((x_pos, y_pos), (goal_x, goal_y))
 
-            if current_distance <= goal_threshold and last_explored_speed == -1: # and current_theta == goal_theta
-                last_explored_speed = current_pos
-                angle_speed = current_theta
+        if current_distance <= goal_threshold:
+          if goal_distance > current_distance:
+            print(current_distance)
+            goal_distance = current_distance
+            last_explored = current_pos
+            print("Goal path found")
+            goal_found = True
 
-            for angle in angles:
-                new_theta = (current_theta + angle) % 360
-                new_x = x_pos + int(((travel_dist * math.cos((new_theta)*math.pi / 180) * scale) ))
-                new_y = y_pos + int(((travel_dist * math.sin((new_theta)*math.pi / 180) * scale) ))
-                new_pos = new_x + (width * new_y)
+        if goal_found:
+          continue
 
-                if new_x < 0 or new_y < 0 or new_x >= width or new_y >= height or new_pos >= height*width:
-                    continue
-                
-                if grid[angle_indices[new_theta], new_pos] < -10:
-                    continue
-                
-                new_distance = heuristic((new_x, new_y), (goal_x, goal_y))      
-                cost = current_cost + (travel_dist * scale) - current_distance + new_distance
-            #  orgrid[new_pos] > cost
-                if grid[angle_indices[new_theta], new_pos] > cost:
-                    grid[angle_indices[new_theta], new_pos] = cost
-                    backtrack_grid[angle_indices[new_theta], new_pos] = (current_pos * 100) + angle_indices[current_theta]
-                    open.put((cost, new_pos, new_theta))
+        for i, action in enumerate(actions):
+          new_x = x_pos
+          new_y = y_pos
+          new_theta = current_theta
+          steps = []
+          steps.append((new_x, new_y))
+          skip = False
+          for j in range(int(tt/dt)):
+            new_theta += ((action[1] - action[0]) * math.pi * dt * wheel_radius / (unscaled_robot_width * 60))
+            new_x += ((action[0] + action[1]) * math.cos(new_theta)) * math.pi * dt * wheel_radius * scale / (60)
+            new_y += ((action[0] + action[1]) * math.sin(new_theta)) *math.pi * dt * wheel_radius * scale / (60)
+            int_x = round(new_x)
+            int_y = round(new_y)
+            new_pos = int_x + (width * int_y)
 
-                    visited.append((new_x, new_y))
-                    visited.append((x_pos, y_pos))
+            if new_x < 0 or new_y < 0 or new_x >= width or new_y >= height or new_pos >= height*width:
+                skip = True
+                break
 
-                    if new_distance <= goal_threshold and new_theta == goal_theta:
-                        print(new_distance)
-                        last_explored = new_pos
-                        print("Goal path found")
-                        goal_found = True
-    # Condition to perform optimal path finding
-    else:
-        if not grid[current_pos] == -13:
-            timestep += 1
-            grid[current_pos] = -13
+            ### Obstacle Check
+            if grid[new_pos] < -10:
+                skip = True
+                break
 
-            x_pos = int(current_pos % width)
-            y_pos = int((current_pos - (current_pos % width))/width)
-            current_distance = heuristic((x_pos, y_pos), (goal_x, goal_y))
+            steps.append((int_x, int_y))
+          if not skip:
 
-            for angle in angles:
-                new_theta = (current_theta + angle) % 360
-                new_x = x_pos + int(((travel_dist * math.cos((new_theta)*math.pi / 180) * scale) ))
-                new_y = y_pos + int(((travel_dist * math.sin((new_theta)*math.pi / 180) * scale) ))
-                new_pos = new_x + (width * new_y)
+            new_distance = heuristic((new_x, new_y), (goal_x, goal_y))
+            cost = current_cost + costs[i] - current_distance + new_distance
 
-                if new_x < 0 or new_y < 0 or new_x >= width or new_y >= height or new_pos >= height*width:
-                    continue
-                
-                if grid[new_pos] < -10:
-                    continue
-                
-                new_distance = heuristic((new_x, new_y), (goal_x, goal_y))      
-                cost = current_cost + (travel_dist * scale) - current_distance + new_distance
+            if grid[new_pos] > cost:
+                grid[new_pos] = cost
+                backtrack_grid[new_pos] = current_pos
+                backtrack_action[new_pos] = i
+                backtrack_path[new_pos] = visit_count
+                open.put((cost, i, new_pos, new_theta))
 
-                if grid[new_pos] > cost:
-                    grid[new_pos] = cost
-                    backtrack_grid[new_pos] = (current_pos * 100) + angle_indices[current_theta]
-                    open.put((cost, new_pos, new_theta))
+                visited_steps.append(steps)
 
-                    visited.append((new_x, new_y))
-                    visited.append((x_pos, y_pos))
-            # Switch to optimal path finding with angle
-            if current_distance <= 5 * travel_dist:
-                precision = True
-                grid = np.array([grid for i in range(12)]) # changes
-                backtrack_grid = np.array([backtrack_grid for i in range(12)]) # changes
-               
-      
+                visit_count += 1
 
+    # if timestep == stop_condition:
+    #   break
 
 print(f"Execution time: {time.time() - start} seconds")
 

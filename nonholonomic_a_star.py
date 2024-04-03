@@ -23,7 +23,7 @@ def createGrid(height, width, bounding_location, padding = 0, wall_padding = 0, 
   grid[gray == 180] = -15
   grid[gray == 0] = -11
   grid = grid.flatten()
-  return grid, gray
+  return grid, image
 
 
 # Function to add padding for walls
@@ -182,7 +182,7 @@ visited_steps = []
 if os.path.exists(obstacle_file_path) and os.path.isfile(obstacle_file_path):
   pass
 else:
-  grid, useless = createGrid(height, width, obstacle_bounding_boxes, effective_padding, effective_padding, padding, scale)
+  grid, useless = createGrid(height, width, obstacle_bounding_boxes, effective_padding, effective_padding, scale)
   # grid = np.full((height*width), 5*height*width)
   backtrack_grid = np.full((height*width), -1)
   backtrack_action = np.full((height*width), -1)
@@ -356,7 +356,7 @@ if recording:
     path.append((starting_x, starting_y))
     path.reverse()
 
-    grid, gray = createGrid(height, width, obstacle_bounding_boxes, unscaled_clearance * scale, unscaled_clearance * scale, 0, scale)
+    grid, gray = createGrid(height, width, obstacle_bounding_boxes, unscaled_clearance * scale, unscaled_clearance * scale, scale)
 
     image = np.full((height, width, 3), (224, 224, 224))
     image[gray == 125] = (125, 125, 125)
@@ -434,7 +434,7 @@ else:
     path.reverse()
     path_action.reverse()
 
-    grid_i, gray = createGrid(height, width, obstacle_bounding_boxes, math.ceil(unscaled_clearance * scale), math.ceil(unscaled_clearance * scale), 0, scale)
+    grid_i, gray = createGrid(height, width, obstacle_bounding_boxes, math.ceil(unscaled_clearance * scale), math.ceil(unscaled_clearance * scale), scale)
 
     image = gray.copy()
 
@@ -456,7 +456,7 @@ else:
     image = cv2.flip(image, 0)
     image = np.uint8(image)
 
-    cv2.imshow("Final", cv2.resize(image, (1200, 500)))
+    cv2.imshow("Final", cv2.resize(image, (1200, 400)))
     cv2.waitKey(0)
 
 cv2.destroyAllWindows()

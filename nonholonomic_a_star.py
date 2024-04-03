@@ -35,6 +35,7 @@ def setWallPadding(image, padding, value):
       (0, height - padding), (width, height),
       (width - padding, 0), (width, height),
   ]
+  print(points)
   for i in range(0, len(points), 2):
     cv2.rectangle(image, points[i], points[i+1], (value, value, value), -1)
   return image
@@ -110,7 +111,7 @@ unscaled_effective_padding = unscaled_robot_radius + unscaled_clearance
 wheel_radius = 33
 wheel_dist = 287
 
-scale = 1/2
+scale = 1/5 # needs to be fn of rpms
 
 height = int(unscaled_height * scale) # y size
 width = int(unscaled_width * scale) # x size
@@ -355,19 +356,19 @@ if recording:
     path_action.reverse()
 
     # Grid generation
-    grid, image = createGrid(height, width, obstacle_bounding_boxes, unscaled_clearance * scale, unscaled_clearance * scale, scale)
+    grid, image = createGrid(height, width, obstacle_bounding_boxes, int(math.ceil(unscaled_clearance * scale)), int(math.ceil(unscaled_clearance * scale)), scale)
 
 
     visited_length = len(visited_steps)
     step_size = int(visited_length / (fps * 2 * 6))
 
     # Show exploration
-    for steps in visited_steps:
-        for i in range(0, 10):
-            cv2.line(image, steps[i], steps[i+1], (125, 255, 125), 2)
+    for i, steps in enumerate(visited_steps):
+        for j in range(0, 10):
+            cv2.line(image, steps[j], steps[j+1], (125, 255, 125), 2)
 
         if i % step_size == 0 or i < 4 * fps:
-            cv2.circle(image, (goal_x, goal_y), int(goal_threshold), (255, 0, 0), scale)
+            cv2.circle(image, (goal_x, goal_y), int(goal_threshold), (255, 0, 0), 2)
             image = cv2.flip(image, 0)
             image = np.uint8(image)
             record.write(image)
@@ -378,8 +379,8 @@ if recording:
         for i in range(0, 10):
             cv2.line(image, steps[i], steps[i+1], (0, 0, 255), 2)
 
-    cv2.circle(image, (goal_x, goal_y), int(goal_threshold), (255, 0, 0), scale)
-
+    cv2.circle(image, (goal_x, goal_y), int(goal_threshold), (255, 0, 0), 2)
+    
     image = cv2.flip(image, 0)
     image = np.uint8(image)
     for i in range(90):
@@ -429,7 +430,7 @@ else:
     path.reverse()
     path_action.reverse()
 
-    grid_i, gray = createGrid(height, width, obstacle_bounding_boxes, math.ceil(unscaled_clearance * scale), math.ceil(unscaled_clearance * scale), scale)
+    grid_i, gray = createGrid(height, width, obstacle_bounding_boxes, int(math.ceil(unscaled_clearance * scale)), int(math.ceil(unscaled_clearance * scale)), scale)
 
     image = gray.copy()
 

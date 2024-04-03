@@ -74,6 +74,7 @@ install(DIRECTORY include/
 # Install python scripts
 install(PROGRAMS 
   scripts/teleop.py
+  # scripts/path_plan.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

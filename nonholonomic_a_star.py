@@ -251,6 +251,7 @@ stop_condition = 2
 
 visit_count = 0
 
+recording = False
 
 # Start A*
 open.put(( heuristic((starting_x, starting_y), (goal_x, goal_y)), -1, current_pos, starting_theta))
@@ -338,10 +339,8 @@ if recording:
     path = []
     if not last_explored == -1:
       index = last_explored
-      index_angle = angle_indices[goal_theta]
     else:
       index = last_explored_speed
-      index_angle = angle_speed
     last = 0
     while backtrack_grid[index_angle, index] > 0:
         x_pos = int(index % width)
@@ -385,7 +384,7 @@ if recording:
         else:
             cv2.line(image, last, point, (0, 0, 255), 2)
             last = point
-    cv2.circle(image, (goal_x, goal_y), int(travel_dist/2), (255, 0, 0), scale)
+    cv2.circle(image, (goal_x, goal_y), int(goal_threshold), (255, 0, 0), scale)
     image = cv2.flip(image, 0)
     image = np.uint8(image)
     for i in range(90):
@@ -416,46 +415,44 @@ if recording:
     cap.release()
 else:
     path = []
+    path_action = []
+    path_steps = []
     if not last_explored == -1:
-      index = last_explored
-      index_angle = angle_indices[goal_theta]
+        index = last_explored
     else:
-      index = last_explored_speed
-      index_angle = angle_indices[angle_speed]
-    last = 0
-    while backtrack_grid[index_angle, index] > 0:
+        index = last_explored_speed
+    while backtrack_grid[index] > 0:
         x_pos = int(index % width)
         y_pos = int((index - (index % width))/width)
 
-        # path.append((x_pos / scale, y_pos / scale))
         path.append((x_pos, y_pos))
-        # print(x_pos, y_pos)
-        # print(((x_pos - goal_x)**2 + (y_pos - goal_y)**2)**0.5)
-        value = backtrack_grid[index_angle, index]
-        index_angle = value % 100
-        if index_angle > 11:
-          index = value
-          index_angle = 0
-        else:
-          index = int(value / 100)
+        path_action.append(actions[backtrack_action[index]])
+        path_steps.append(visited_steps[backtrack_path[index]])
+
+        index = backtrack_grid[index]
     path.append((starting_x, starting_y))
     path.reverse()
+    path_action.reverse()
 
-    grid, gray = createGrid(height, width, obstacle_bounding_boxes, unscaled_clearance * scale, unscaled_clearance * scale, 0, scale)
+    grid_i, gray = createGrid(height, width, obstacle_bounding_boxes, math.ceil(unscaled_clearance * scale), math.ceil(unscaled_clearance * scale), 0, scale)
 
-    image = np.full((height, width, 3), (224, 224, 224))
-    image[gray == 125] = (125, 125, 125)
-    image[gray == 0] = (0, 0, 0)
-    image = np.ascontiguousarray(image, dtype=np.uint8)
+    image = gray.copy()
 
-    last = -1
-    for point in path:
-        if last == -1:
-            last = point
-        else:
-            cv2.line(image, last, point, (0, 0, 255), 2)
-            last = point
-    cv2.circle(image, (goal_x, goal_y), int(travel_dist/2), (255, 0, 0), scale)
+
+    ### Visited Show
+    for steps in visited_steps:
+        for i in range(0, 10):
+            cv2.line(image, steps[i], steps[i+1], (125, 255, 125), 2)
+
+
+
+    ### Final Path Show
+    for steps in path_steps:
+        for i in range(0, 10):
+            cv2.line(image, steps[i], steps[i+1], (0, 0, 255), 2)
+
+
+    cv2.circle(image, (goal_x, goal_y), int(goal_threshold), (255, 0, 0), 2)
     image = cv2.flip(image, 0)
     image = np.uint8(image)
 

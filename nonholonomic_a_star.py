@@ -329,6 +329,21 @@ print(f"Execution time: {time.time() - start} seconds")
 
 
 start = time.time()
+
+#Print action sets
+action_sets = []
+index = last_explored if last_explored != -1 else last_explored_speed
+while backtrack_grid[index] > 0:
+    action_index = backtrack_action[index]
+    action_sets.append(actions[action_index])
+    index = backtrack_grid[index]
+
+action_sets.reverse()
+
+print("Action Sets (RPM settings for each step):")
+for action in action_sets:
+    print(action)
+
 # Display or record video
 if recording:
     size = (width, height)

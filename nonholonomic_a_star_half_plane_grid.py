@@ -239,7 +239,7 @@ for i, action in enumerate(actions):
   old_y = 0
   new_theta = starting_theta
   for j in range(int(tt/dt)):
-    new_theta += ((action[1] - action[0]) * math.pi * dt * wheel_radius / (unscaled_robot_width * 60))
+    new_theta += ((action[1] - action[0]) * 2 * math.pi * dt * wheel_radius / (unscaled_robot_width * 60))
     new_x = old_x + ((action[0] + action[1]) * math.cos(new_theta)) * math.pi * dt * wheel_radius * scale / (60)
     new_y = old_y + ((action[0] + action[1]) * math.sin(new_theta)) *math.pi * dt * wheel_radius * scale / (60)
 
@@ -254,7 +254,7 @@ stop_condition = 2
 
 visit_count = 0
 
-recording = True
+recording = False
 
 # Start A*
 open.put(( heuristic((starting_x, starting_y), (goal_x, goal_y)), -1, current_pos, starting_theta))
@@ -293,7 +293,7 @@ while not open.empty():
           steps.append((new_x, new_y))
           skip = False
           for j in range(int(tt/dt)):
-            new_theta += ((action[1] - action[0]) * math.pi * dt * wheel_radius / (unscaled_robot_width * 60))
+            new_theta += ((action[1] - action[0]) * 2 * math.pi * dt * wheel_radius / (unscaled_robot_width * 60))
             new_x += ((action[0] + action[1]) * math.cos(new_theta)) * math.pi * dt * wheel_radius * scale / (60)
             new_y += ((action[0] + action[1]) * math.sin(new_theta)) *math.pi * dt * wheel_radius * scale / (60)
             int_x = round(new_x)

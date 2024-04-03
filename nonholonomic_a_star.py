@@ -151,8 +151,6 @@ timestep = 0
 
 last_explored = last_explored_speed = -1
 
-recording = False
-
 obstacle_file_path = ""
 
 obstacle_bounding_boxes = [
@@ -251,7 +249,7 @@ stop_condition = 2
 
 visit_count = 0
 
-recording = False
+recording = True
 
 # Start A*
 open.put(( heuristic((starting_x, starting_y), (goal_x, goal_y)), -1, current_pos, starting_theta))
@@ -337,54 +335,51 @@ if recording:
     record = cv2.VideoWriter('final_video.avi', cv2.VideoWriter_fourcc(*'MJPG'), fps, size)
 
     path = []
+    path_action = []
+    path_steps = []
     if not last_explored == -1:
-      index = last_explored
+        index = last_explored
     else:
-      index = last_explored_speed
-    last = 0
-    while backtrack_grid[index_angle, index] > 0:
+        index = last_explored_speed
+    while backtrack_grid[index] > 0:
         x_pos = int(index % width)
         y_pos = int((index - (index % width))/width)
 
-        # path.append((x_pos / scale, y_pos / scale))
         path.append((x_pos, y_pos))
-        # print(x_pos, y_pos)
-        # print(((x_pos - goal_x)**2 + (y_pos - goal_y)**2)**0.5)
-        value = backtrack_grid[index_angle, index]
-        index_angle = value % 100
-        index = int(value / 100)
+        path_action.append(actions[backtrack_action[index]])
+        path_steps.append(visited_steps[backtrack_path[index]])
+
+        index = backtrack_grid[index]
     path.append((starting_x, starting_y))
     path.reverse()
+    path_action.reverse()
 
-    grid, gray = createGrid(height, width, obstacle_bounding_boxes, unscaled_clearance * scale, unscaled_clearance * scale, scale)
+    # Grid generation
+    grid, image = createGrid(height, width, obstacle_bounding_boxes, unscaled_clearance * scale, unscaled_clearance * scale, scale)
 
-    image = np.full((height, width, 3), (224, 224, 224))
-    image[gray == 125] = (125, 125, 125)
-    image[gray == 0] = (0, 0, 0)
-    image = np.ascontiguousarray(image, dtype=np.uint8)
 
-    visited_length = len(visited)
+    visited_length = len(visited_steps)
     step_size = int(visited_length / (fps * 2 * 6))
-    print(visited_length, step_size)
 
-    for i in range(0, visited_length, 2):
-      cv2.line(image, visited[i], visited[i+1], (125, 255, 125), 2)
+    # Show exploration
+    for steps in visited_steps:
+        for i in range(0, 10):
+            cv2.line(image, steps[i], steps[i+1], (125, 255, 125), 2)
 
-      if i % step_size == 0 or i < 4 * fps:
-        cv2.circle(image, (goal_x, goal_y), int(goal_threshold), (255, 0, 0), scale)
-        image = cv2.flip(image, 0)
-        image = np.uint8(image)
-        record.write(image)
-        image = cv2.flip(image, 0)
+        if i % step_size == 0 or i < 4 * fps:
+            cv2.circle(image, (goal_x, goal_y), int(goal_threshold), (255, 0, 0), scale)
+            image = cv2.flip(image, 0)
+            image = np.uint8(image)
+            record.write(image)
+            image = cv2.flip(image, 0)
     
-    last = -1
-    for point in path:
-        if last == -1:
-            last = point
-        else:
-            cv2.line(image, last, point, (0, 0, 255), 2)
-            last = point
+    # Show final path
+    for steps in path_steps:
+        for i in range(0, 10):
+            cv2.line(image, steps[i], steps[i+1], (0, 0, 255), 2)
+
     cv2.circle(image, (goal_x, goal_y), int(goal_threshold), (255, 0, 0), scale)
+
     image = cv2.flip(image, 0)
     image = np.uint8(image)
     for i in range(90):
@@ -438,12 +433,10 @@ else:
 
     image = gray.copy()
 
-
     ### Visited Show
     for steps in visited_steps:
         for i in range(0, 10):
             cv2.line(image, steps[i], steps[i+1], (125, 255, 125), 2)
-
 
 
     ### Final Path Show

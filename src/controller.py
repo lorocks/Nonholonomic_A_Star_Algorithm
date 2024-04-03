@@ -4,6 +4,8 @@ from rclpy.node import Node
 from geometry_msgs.msg import Twist
 import math
 
+from nonholonomic_a_star_fn import runAStar
+
 class RPMControlNode(Node):
 
     def _init_(self, action_sets):
@@ -35,8 +37,30 @@ class RPMControlNode(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    action_sets = [[50,0], [100,100], [0,50], [0,50], [100,50], [100,100], [0,100], [100,0]]  # actions drom path geneator 
+
+    scale = 1/5
+
+    height = 2000
+    width = 6000
+
+    robot_radius = 220
+    clearance = 15
+    wheel_separation = 287
+    wheel_radius = 33
+
+    starting_x = 500
+    starting_y = 500
+    starting_theta = 0
+
+    goal_x = 1000
+    goal_y = 1000
+
+    rpm1 = 50
+    rpm2 = 100
+
     node = RPMControlNode(action_sets)
+    action_sets= runAStar(height, width, robot_radius, clearance, wheel_separation, wheel_radius, starting_x, starting_y, starting_theta, goal_x, goal_y, rpm1, rpm2, scale)
+    
     node.follow_actions()
     node.destroy_node()
     rclpy.shutdown()

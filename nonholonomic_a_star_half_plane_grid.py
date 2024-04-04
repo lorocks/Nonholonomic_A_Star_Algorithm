@@ -458,3 +458,7 @@ else:
     cv2.waitKey(0)
 
 cv2.destroyAllWindows()
+
+print("Action Sets (RPM settings for each step):")
+for action in path_action:
+    print(action)

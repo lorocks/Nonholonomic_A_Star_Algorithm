@@ -35,7 +35,6 @@ def setWallPadding(image, padding, value):
       (0, height - padding), (width, height),
       (width - padding, 0), (width, height),
   ]
-  print(points)
   for i in range(0, len(points), 2):
     cv2.rectangle(image, points[i], points[i+1], (value, value, value), -1)
   return image
@@ -250,7 +249,7 @@ stop_condition = 2
 
 visit_count = 0
 
-recording = True
+recording = False
 
 # Start A*
 open.put(( heuristic((starting_x, starting_y), (goal_x, goal_y)), -1, current_pos, starting_theta))
@@ -330,19 +329,17 @@ print(f"Execution time: {time.time() - start} seconds")
 
 start = time.time()
 
-#Print action sets
-action_sets = []
-index = last_explored if last_explored != -1 else last_explored_speed
-while backtrack_grid[index] > 0:
-    action_index = backtrack_action[index]
-    action_sets.append(actions[action_index])
-    index = backtrack_grid[index]
+# #Print action sets
+# action_sets = []
+# index = last_explored if last_explored != -1 else last_explored_speed
+# while backtrack_grid[index] > 0:
+#     action_index = backtrack_action[index]
+#     action_sets.append(actions[action_index])
+#     index = backtrack_grid[index]
 
-action_sets.reverse()
+# action_sets.reverse()
 
-print("Action Sets (RPM settings for each step):")
-for action in action_sets:
-    print(action)
+
 
 # Display or record video
 if recording:
@@ -375,7 +372,7 @@ if recording:
 
 
     visited_length = len(visited_steps)
-    step_size = int(visited_length / (fps * 2 * 6))
+    step_size = int(visited_length / (fps * 2 * 6)) + 1
 
     # Show exploration
     for i, steps in enumerate(visited_steps):
@@ -469,3 +466,7 @@ else:
     cv2.waitKey(0)
 
 cv2.destroyAllWindows()
+
+print("Action Sets (RPM settings for each step):")
+for action in path_action:
+    print(action)

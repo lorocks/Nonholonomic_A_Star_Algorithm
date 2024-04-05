@@ -20,7 +20,7 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription
+from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 
@@ -33,12 +33,20 @@ def generate_launch_description():
     x_pose = LaunchConfiguration('x_pose', default='0.0')
     y_pose = LaunchConfiguration('y_pose', default='0.0')
 
+    x_pos_arg = DeclareLaunchArgument(
+        name='x_pose', default_value=x_pose, description='Enter spawn position of x'
+    )
+    y_pos_arg = DeclareLaunchArgument(
+        name='y_pose', default_value=y_pose, description='Enter spawn position of y'
+    )
+
     world = os.path.join(
         get_package_share_directory('turtlebot3_project3'),
         'worlds',
-        'empty_world.world'
+        'competition_world.world'
     )
 
+    # Change this code
     gzserver_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(pkg_gazebo_ros, 'launch', 'gzserver.launch.py')
@@ -46,6 +54,7 @@ def generate_launch_description():
         launch_arguments={'world': world}.items()
     )
 
+    # Change this code
     gzclient_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(pkg_gazebo_ros, 'launch', 'gzclient.launch.py')
@@ -76,5 +85,7 @@ def generate_launch_description():
     ld.add_action(gzclient_cmd)
     ld.add_action(robot_state_publisher_cmd)
     ld.add_action(spawn_turtlebot_cmd)
+    ld.add_action(x_pos_arg)
+    ld.add_action(y_pos_arg)
 
     return ld

@@ -36,10 +36,9 @@ def generate_launch_description():
     world = os.path.join(
         get_package_share_directory('turtlebot3_project3'),
         'worlds',
-        'competition_world.world'
+        'empty_world.world'
     )
 
-    # Change this code
     gzserver_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(pkg_gazebo_ros, 'launch', 'gzserver.launch.py')
@@ -47,7 +46,6 @@ def generate_launch_description():
         launch_arguments={'world': world}.items()
     )
 
-    # Change this code
     gzclient_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(pkg_gazebo_ros, 'launch', 'gzclient.launch.py')
@@ -67,7 +65,7 @@ def generate_launch_description():
         ),
         launch_arguments={
             'x_pose': x_pose,
-            'y_pose': y_pose
+            'y_pose': '0.0'
         }.items()
     )
 

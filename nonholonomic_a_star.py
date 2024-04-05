@@ -251,8 +251,12 @@ visit_count = 0
 
 recording = False
 
+initial_distance = heuristic((starting_x, starting_y), (goal_x, goal_y))
+
+progress = 0
+print("Exploration Progress: 0%")
 # Start A*
-open.put(( heuristic((starting_x, starting_y), (goal_x, goal_y)), -1, current_pos, starting_theta))
+open.put(( initial_distance, -1, current_pos, starting_theta))
 
 goal_distance = goal_threshold + 1
 
@@ -270,12 +274,24 @@ while not open.empty():
         current_distance = heuristic((x_pos, y_pos), (goal_x, goal_y))
 
         if current_distance <= goal_threshold:
+          if progress == 3:
+            print("Exploration Progress: 99%")
+            progress = 4
           if goal_distance > current_distance:
             print(current_distance)
             goal_distance = current_distance
             last_explored = current_pos
             print("Goal path found")
             goal_found = True
+        elif progress == 0 and current_distance/initial_distance < 0.75:
+            print("Exploration Progress: 25%")
+            progress = 1
+        elif progress == 1 and current_distance/initial_distance < 0.5:
+            print("Exploration Progress: 50%")
+            progress = 2
+        elif progress == 2 and current_distance/initial_distance < 0.25:
+            print("Exploration Progress: 75%")
+            progress = 3
 
         if goal_found:
           continue

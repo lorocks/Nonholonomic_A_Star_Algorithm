@@ -19,7 +19,7 @@ class RPMControlNode(Node):
     def rpm_to_velocity(self, rpm_left, rpm_right):
         # RPM -> linear and angular speed
         linear_vel = (rpm_left + rpm_right) * math.pi * self.wheel_radius / 60
-        angular_vel = (rpm_right - rpm_left) * math.pi * self.wheel_radius / (60 * self.robot_base)
+        angular_vel = (rpm_right - rpm_left) * 2 * math.pi * self.wheel_radius / (60 * self.robot_base)
         return linear_vel, angular_vel
 
     def timer_callback(self):

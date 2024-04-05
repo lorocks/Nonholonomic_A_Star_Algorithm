@@ -39,6 +39,7 @@ def generate_launch_description():
         'competition_world.world'
     )
 
+    # Change this code
     gzserver_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(pkg_gazebo_ros, 'launch', 'gzserver.launch.py')
@@ -46,6 +47,7 @@ def generate_launch_description():
         launch_arguments={'world': world}.items()
     )
 
+    # Change this code
     gzclient_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(pkg_gazebo_ros, 'launch', 'gzclient.launch.py')

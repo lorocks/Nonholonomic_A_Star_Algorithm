@@ -28,9 +28,31 @@ def createGrid(height, width, bounding_location, padding = 0, wall_padding = 0, 
         y_small = center_y - radius
         y_big = center_y + radius
 
+        if x_small - padding > 0:
+            x_small_pad -= padding
+        else:
+            x_small_pad = 0
+        if x_big + padding < width:
+            x_big_pad += padding
+        else:
+            x_big_pad = width
+        if y_small - padding > 0:
+            y_small_pad -= padding
+        else:
+            y_small_pad = 0
+        if y_big + padding < height:
+            y_big_pad += padding
+        else:
+            y_big_pad = height
+        
         for x in range(x_small, x_big):
             for y in range(y_small, y_big):
-                if heuristic((x, y), (center_x, center_y)) <= radius:
+                if heuristic((x, y), (center_x, center_y)) <= radius + padding + 1:
+                    image[y, x] = (125, 125, 125)
+
+        for x in range(x_small, x_big):
+            for y in range(y_small, y_big):
+                if heuristic((x, y), (center_x, center_y)) <= radius + 1:
                     image[y, x] = (0, 0, 0)
 
     else:

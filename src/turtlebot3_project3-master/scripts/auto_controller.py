@@ -59,7 +59,8 @@ def main(args=None):
     rpm2 = 100
 
     node = RPMControlNode(action_sets)
-    action_sets= runAStar(height, width, robot_radius, clearance, wheel_separation, wheel_radius, starting_x, starting_y, starting_theta, goal_x, goal_y, rpm1, rpm2, scale)
+    action_sets = runAStar(height, width, robot_radius, clearance, wheel_separation, wheel_radius, starting_x, starting_y, starting_theta, goal_x, goal_y, rpm1, rpm2, scale)
+    action_sets.append((0, 0))
     
     node.follow_actions()
     node.destroy_node()

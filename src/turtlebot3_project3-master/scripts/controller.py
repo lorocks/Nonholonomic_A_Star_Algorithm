@@ -2,12 +2,14 @@
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
+from nav_msgs.msg import Odometry
 import math
 
 class RPMControlNode(Node):
     def __init__(self, action_sets):
         super().__init__('rpm_control_node')
         self.cmd_vel_pub = self.create_publisher(Twist, '/cmd_vel', 10)
+        self.odom_sub = self.create_subscription(Odometry, '/odom', self.odom_callback, 10)
         self.action_sets = action_sets
         self.action_index = 0  # track actions
         self.wheel_radius = 0.033  # wheel radius
@@ -16,6 +18,13 @@ class RPMControlNode(Node):
         # Setup timer with 1 second duration in simulation time
         self.timer = self.create_timer(1.0, self.timer_callback)
 
+    def odom_callback(self, msg):
+        position = msg.pose.pose.position
+        x_int = int(position.x*1000+500)
+        y_int = int(position.y*1000+1000)
+        self.get_logger().info(f'Position : (X: {x_int}, Y: {y_int})')
+
+        
     def rpm_to_velocity(self, rpm_left, rpm_right):
         # RPM -> linear and angular speed
         linear_vel = (rpm_left + rpm_right) * math.pi * self.wheel_radius / 60

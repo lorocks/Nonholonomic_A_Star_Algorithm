@@ -366,4 +366,4 @@ def runAStar(unscaled_height, unscaled_width, unscaled_robot_radius, unscaled_cl
 
     cv2.destroyAllWindows()
 
-    return path_action
+    return path_action, path_steps

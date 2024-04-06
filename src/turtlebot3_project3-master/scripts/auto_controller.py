@@ -87,7 +87,7 @@ def main(args=None):
     print("Node created")
     node = RPMControlNode()
     print(node.scale, int(node.robot_radius * 1000), int(node.wheel_radius * 1000), int(node.clearance),int(node.robot_base * 1000), int(node.start_x), int(node.start_y), int(node.goal_x), int(node.goal_y), node.rpm1, node.rpm2)
-    action_sets = runAStar(height, width, int(node.robot_radius * 1000), int(node.clearance), int(node.robot_base * 1000), (node.wheel_radius * 1000), int(node.start_x), int(node.start_y), node.start_angle, int(node.goal_x), int(node.goal_y), node.rpm1, node.rpm2, node.scale)
+    action_sets, useless = runAStar(height, width, int(node.robot_radius * 1000), int(node.clearance), int(node.robot_base * 1000), (node.wheel_radius * 1000), int(node.start_x), int(node.start_y), node.start_angle, int(node.goal_x), int(node.goal_y), node.rpm1, node.rpm2, node.scale)
     # action_sets = runAStar(2000, 6000, 220, 15, 287, 33, 500, 500, 0, 3000, 300, 50, 100, 1/5)
     action_sets.append((0, 0))
     node.action_sets = action_sets

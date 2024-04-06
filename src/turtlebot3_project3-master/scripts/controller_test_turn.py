@@ -13,7 +13,7 @@ class RPMControlNode(Node):
         self.action_sets = action_sets
         self.action_index = 0  # track actions
         self.wheel_radius = 0.033  # wheel radius
-        self.robot_base = 0.287  # dist of two wheel 
+        self.robot_base = 0.288  # dist of two wheel 
         
         # Setup timer with 1 second duration in simulation time
         self.timer = self.create_timer(1.0, self.timer_callback)
@@ -26,9 +26,19 @@ class RPMControlNode(Node):
 
         
     def rpm_to_velocity(self, rpm_left, rpm_right):
+        v_left = rpm_left * math.pi * self.wheel_radius / 30
+        v_right = rpm_right * math.pi * self.wheel_radius / 30
+        omega = (v_right - v_left) / self.robot_base
+        angular_vel = (v_right - v_left) / self.robot_base
+
+        if v_left != v_right:
+            R = (self.robot_base / 2) * ((v_left + v_right) / (v_right - v_left))
+            linear_vel = omega * R
+        else:
+            linear_vel = v_left
         # RPM -> linear and angular speed
-        linear_vel = (rpm_left + rpm_right) * math.pi * self.wheel_radius / 60
-        angular_vel = (rpm_right - rpm_left) * math.pi * self.wheel_radius / (60 * self.robot_base)
+        # linear_vel = (rpm_left + rpm_right) * math.pi * self.wheel_radius / (60*2)
+        
         return linear_vel, angular_vel
 
     def timer_callback(self):
@@ -50,43 +60,43 @@ class RPMControlNode(Node):
 def main(args=None):
     rclpy.init(args=args)
     action_sets = [(0,0),
-                (50, 0),
-                (0, 50),
-                (50, 0),
-                (50, 50),
-                (50, 50),
-                (50, 50),
-                (0, 50),
-                (100, 100),
-                (50, 0),
-                (0, 100),
-                (0, 50),
-                (0, 50),
-                (0, 50),
-                (50, 0),
-                (50, 50),
-                (100, 0),
-                (50, 0),
-                (50, 50),
-                (50, 50),
-                (50, 0),
-                (100, 50),
-                (50, 0),
-                (0, 50),
-                (50, 0),
-                (50, 100),
-                (100, 100),
-                (50, 100),
-                (50, 100),
-                (50, 50),
-                (0, 50),
-                (100, 100),
-                (0, 50),
-                (50, 0),
-                (0, 50),
-                (100, 50),
-                (100, 100),
-                (50, 100),
+                   (30*(1+0.288/2)/0.033, 30*(1-0.288/2)/0.033),
+                # (50, 0),
+                # (50, 100),
+                # (50, 0),
+                # (50, 100),
+                # (50, 0),
+                # (50, 100),
+                # (100, 100),
+                # (0, 50),
+                # (50, 0),
+                # (0, 100),
+                # (100, 100),
+                # (100, 0),
+                # (50, 50),
+                # (100, 100),
+                # (50, 0),
+                # (50, 50),
+                # (50, 0),
+                # (0, 50),
+                # (50, 0),
+                # (0, 50),
+                # (50, 0),
+                # (0, 50),
+                # (50, 50),
+                # (50, 50),
+                # (50, 50),
+                # (50, 100),
+                # (50, 50),
+                # (50, 100),
+                # (50, 0),
+                # (0, 50),
+                # (50, 50),
+                # (100, 100),
+                # (50, 0),
+                # (50, 100),
+                # (50, 0),
+                # (50, 100),
                 (0, 0)]  # actions from path geneator 
     node = RPMControlNode(action_sets)
     

@@ -28,6 +28,11 @@ def createGrid(height, width, bounding_location, padding = 0, wall_padding = 0, 
         y_small = center_y - radius
         y_big = center_y + radius
 
+        x_small_pad = x_small
+        x_big_pad = x_big
+        y_small_pad = y_small
+        y_big_pad = y_big
+
         if x_small - padding > 0:
             x_small_pad -= padding
         else:
@@ -45,8 +50,8 @@ def createGrid(height, width, bounding_location, padding = 0, wall_padding = 0, 
         else:
             y_big_pad = height
         
-        for x in range(x_small, x_big):
-            for y in range(y_small, y_big):
+        for x in range(x_small_pad, x_big_pad):
+            for y in range(y_small_pad, y_big_pad):
                 if heuristic((x, y), (center_x, center_y)) <= radius + padding + 1:
                     image[y, x] = (125, 125, 125)
 
@@ -123,8 +128,6 @@ def heuristic(node, goal):
 
 
 # Set initial variables
-start = time.time()
-
 unscaled_clearance = int(input("\nEnter the obstacle clearance:"))
 unscaled_robot_radius = 220
 unscaled_robot_width = 287
@@ -201,6 +204,8 @@ rect2_y_high = (1000 * scale) + non_round_pad
 open = PriorityQueue()
 visited = []
 visited_steps = []
+
+start = time.time()
 
 if os.path.exists(obstacle_file_path) and os.path.isfile(obstacle_file_path):
   pass

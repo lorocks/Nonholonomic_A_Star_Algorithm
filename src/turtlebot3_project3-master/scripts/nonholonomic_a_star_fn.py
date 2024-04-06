@@ -28,6 +28,33 @@ def createGrid(height, width, bounding_location, padding = 0, wall_padding = 0, 
         y_small = center_y - radius
         y_big = center_y + radius
 
+        x_small_pad = x_small
+        x_big_pad = x_big
+        y_small_pad = y_small
+        y_big_pad = y_big
+
+        if x_small - padding > 0:
+            x_small_pad -= padding
+        else:
+            x_small_pad = 0
+        if x_big + padding < width:
+            x_big_pad += padding
+        else:
+            x_big_pad = width
+        if y_small - padding > 0:
+            y_small_pad -= padding
+        else:
+            y_small_pad = 0
+        if y_big + padding < height:
+            y_big_pad += padding
+        else:
+            y_big_pad = height
+        
+        for x in range(x_small_pad, x_big_pad):
+            for y in range(y_small_pad, y_big_pad):
+                if heuristic((x, y), (center_x, center_y)) <= radius + padding + 1:
+                    image[y, x] = (125, 125, 125)
+
         for x in range(x_small, x_big):
             for y in range(y_small, y_big):
                 if heuristic((x, y), (center_x, center_y)) <= radius:
@@ -246,13 +273,13 @@ def runAStar(unscaled_height, unscaled_width, unscaled_robot_radius, unscaled_cl
                     last_explored = current_pos
                     print("Goal path found")
                     goal_found = True
-            elif progress == 0 and current_distance/initial_distance > 0.25:
+            elif progress == 0 and current_distance/initial_distance < 0.75:
                 print("Exploration Progress: 25%")
                 progress = 1
-            elif progress == 1 and current_distance/initial_distance > 0.5:
+            elif progress == 1 and current_distance/initial_distance < 0.5:
                 print("Exploration Progress: 50%")
                 progress = 2
-            elif progress == 2 and current_distance/initial_distance > 0.75:
+            elif progress == 2 and current_distance/initial_distance < 0.25:
                 print("Exploration Progress: 75%")
                 progress = 3
 

@@ -1,29 +1,73 @@
 #!/usr/bin/env python3
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy
 from geometry_msgs.msg import Twist
+from rosgraph_msgs.msg import Clock
 import math
 
 from nonholonomic_a_star_fn import runAStar
 
 class RPMControlNode(Node):
 
-    def _init_(self, action_sets):
-        super()._init_('rpm_control_node')
+    def __init__(self):
+        super().__init__('RPM_control_node')
+        self.declare_parameters(
+            namespace='',
+            parameters=[
+                ('start_x', 500.0),
+                ('start_y', 1000.0),
+                ('start_angle', 0.0),
+                ('goal_x', 3000.0),
+                ('goal_y', 300.0),
+                ('clearance', 20.0),
+                ('rpm1', 15.0),
+                ('rpm2', 25.0),
+                ('scale', 1/5)
+            ]
+        )
+
+        self.start_x = self.get_parameter('start_x').get_parameter_value().double_value
+        self.start_y = self.get_parameter('start_y').get_parameter_value().double_value
+        self.start_angle = self.get_parameter('start_angle').get_parameter_value().double_value
+        self.goal_x = self.get_parameter('goal_x').get_parameter_value().double_value
+        self.goal_y = self.get_parameter('goal_y').get_parameter_value().double_value
+        self.clearance = self.get_parameter('clearance').get_parameter_value().double_value
+        self.rpm1 = self.get_parameter('rpm1').get_parameter_value().double_value
+        self.rpm2 = self.get_parameter('rpm2').get_parameter_value().double_value
+        self.scale = self.get_parameter('scale').get_parameter_value().double_value
+
         self.cmd_vel_pub = self.create_publisher(Twist, '/cmd_vel', 10)
-        self.action_sets = action_sets
+        self.action_sets = []
+        self.action_num = 0
+        self.actual_start = False
         self.wheel_radius = 0.033  # wheel radius TBD
         self.robot_base = 0.287  # dist of two wheel 
+        self.robot_radius = 0.220
+
+        qos_profile = QoSProfile(reliability = ReliabilityPolicy.BEST_EFFORT, history = HistoryPolicy.KEEP_LAST, depth = 10)
+
+        self.current_time = 0
+        self.clock = self.create_subscription(Clock, 'clock', self.follow_actions, qos_profile)
 
     def rpm_to_velocity(self, rpm_left, rpm_right):
         # RPM -> linear and angular speed
-        linear_vel = (rpm_left + rpm_right) * math.pi * self.wheel_radius / 60
-        angular_vel = (rpm_right - rpm_left) * math.pi * self.wheel_radius / (30 * self.robot_base)
+        linear_vel = (rpm_left + rpm_right) / (1000)
+        angular_vel = (rpm_right - rpm_left) * 2 / (self.robot_base * 1000)
         return linear_vel, angular_vel
 
-    def follow_actions(self):
-        for action in self.action_sets:
-            rpm_left, rpm_right = action
+    def follow_actions(self, msg):
+        sim_time = msg.clock.sec + (msg.clock.nanosec * 0.000000001)
+        time_diff = sim_time - self.current_time
+
+        if time_diff >= 1.05 and self.actual_start:
+            try:
+                if self.action_num % 2 == 0:
+                    rpm_left, rpm_right = self.action_sets[int(self.action_num / 2)]
+                else:
+                    rpm_left  = rpm_right = 0
+            except Exception as error:
+                raise SystemExit
             linear_vel, angular_vel = self.rpm_to_velocity(rpm_left, rpm_right)
             
             # Publish
@@ -32,39 +76,32 @@ class RPMControlNode(Node):
             velocity_message.angular.z = angular_vel
             self.cmd_vel_pub.publish(velocity_message)
             
-            # set of time for each action
-            rclpy.spin_once(self, timeout_sec=1)
+            self.action_num += 1
+            self.current_time = sim_time
 
 def main(args=None):
     rclpy.init(args=args)
 
-    scale = 1/5
-
     height = 2000
     width = 6000
-
-    robot_radius = 220
-    clearance = 15
-    wheel_separation = 287
-    wheel_radius = 33
-
-    starting_x = 500
-    starting_y = 500
-    starting_theta = 0
-
-    goal_x = 1000
-    goal_y = 1000
-
-    rpm1 = 50
-    rpm2 = 100
-
-    node = RPMControlNode(action_sets)
-    action_sets = runAStar(height, width, robot_radius, clearance, wheel_separation, wheel_radius, starting_x, starting_y, starting_theta, goal_x, goal_y, rpm1, rpm2, scale)
+    print("Node created")
+    node = RPMControlNode()
+    print(node.scale, int(node.robot_radius * 1000), int(node.wheel_radius * 1000), int(node.clearance),int(node.robot_base * 1000), int(node.start_x), int(node.start_y), int(node.goal_x), int(node.goal_y), node.rpm1, node.rpm2)
+    action_sets = runAStar(height, width, int(node.robot_radius * 1000), int(node.clearance), int(node.robot_base * 1000), (node.wheel_radius * 1000), int(node.start_x), int(node.start_y), node.start_angle, int(node.goal_x), int(node.goal_y), node.rpm1, node.rpm2, node.scale)
+    # action_sets = runAStar(2000, 6000, 220, 15, 287, 33, 500, 500, 0, 3000, 300, 50, 100, 1/5)
     action_sets.append((0, 0))
-    
-    node.follow_actions()
+    node.action_sets = action_sets
+    node.actual_start = True
+
+    print("Action sets found")
+
+    try:
+        rclpy.spin(node)
+    except:
+        rclpy.logging.get_logger("Exit Program").info("Execution Complete")
+
     node.destroy_node()
     rclpy.shutdown()
 
-if __name__ == '_main_':
+if __name__ == '__main__':
     main()

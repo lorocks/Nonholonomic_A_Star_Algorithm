@@ -204,6 +204,8 @@ def runAStar(unscaled_height, unscaled_width, unscaled_robot_radius, unscaled_cl
     open = PriorityQueue()
     visited_steps = []
 
+    print("Building Obstacle Space")
+
     if os.path.exists(obstacle_file_path) and os.path.isfile(obstacle_file_path):
         pass
     else:

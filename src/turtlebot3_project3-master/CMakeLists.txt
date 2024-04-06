@@ -23,6 +23,7 @@ find_package(ament_cmake REQUIRED)
 find_package(gazebo REQUIRED)
 find_package(gazebo_ros_pkgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(rosgraph_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
@@ -41,6 +42,7 @@ include_directories(
 )
 
 set(dependencies
+  "rosgraph_msgs"
   "geometry_msgs"
   "nav_msgs"
   "rclcpp"
@@ -48,10 +50,10 @@ set(dependencies
   "tf2"
 )
 
-set(EXEC_NAME "turtlebot3_drive")
+# set(EXEC_NAME "turtlebot3_drive")
 
-add_executable(${EXEC_NAME} src/turtlebot3_drive.cpp)
-ament_target_dependencies(${EXEC_NAME} ${dependencies})
+# add_executable(${EXEC_NAME} src/turtlebot3_drive.cpp)
+# ament_target_dependencies(${EXEC_NAME} ${dependencies})
 
 
 
@@ -74,7 +76,9 @@ install(DIRECTORY include/
 # Install python scripts
 install(PROGRAMS 
   scripts/teleop.py
-  # scripts/path_plan.py
+  scripts/controller.py
+  scripts/auto_controller.py
+  scripts/nonholonomic_a_star_fn.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
@@ -83,6 +87,7 @@ install(PROGRAMS
 ################################################################################
 ament_export_include_directories(include)
 ament_export_dependencies(gazebo_ros_pkgs)
+ament_export_dependencies(rosgraph_msgs)
 ament_export_dependencies(geometry_msgs)
 ament_export_dependencies(nav_msgs)
 ament_export_dependencies(rclcpp)

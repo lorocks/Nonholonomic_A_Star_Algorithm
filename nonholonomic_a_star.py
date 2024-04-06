@@ -102,7 +102,7 @@ start = time.time()
 
 unscaled_clearance = int(input("\nEnter the obstacle clearance:"))
 unscaled_robot_radius = 220
-unscaled_robot_width = 287
+unscaled_robot_width = 287*1.5+70
 unscaled_height = 2000
 unscaled_width = 6000
 unscaled_effective_padding = unscaled_robot_radius + unscaled_clearance

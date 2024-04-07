@@ -18,8 +18,8 @@ class RPMControlNode(Node):
                 ('start_x', 500.0),
                 ('start_y', 1000.0),
                 ('start_angle', 0.0),
-                ('goal_x', 3000.0),
-                ('goal_y', 300.0),
+                ('goal_x', 5750.0),
+                ('goal_y', 1000.0),
                 ('clearance', 28.0),
                 ('rpm1', 10.0),
                 ('rpm2', 20.0),
@@ -62,18 +62,19 @@ class RPMControlNode(Node):
         sim_time = msg.clock.sec + (msg.clock.nanosec * 0.000000001)
         time_diff = sim_time - self.current_time
 
-        if self.optimize and self.action_num % 2 == 0:
-            time_check = self.action_sets[int(self.action_num / 2)][2]
-        else:
-            time_check = self.time_diff
-
-        if time_diff >= time_check and self.actual_start:
+        if time_diff >= self.time_diff and self.actual_start:
             try:
-                if self.action_num % 2 == 0:
-                    rpm_left = self.action_sets[int(self.action_num / 2)][0]
-                    rpm_right = self.action_sets[int(self.action_num / 2)][1]
-                else:
-                    rpm_left  = rpm_right = 0
+                # if self.action_num % 2 == 0:
+                    # rpm_left = self.action_sets[int(self.action_num / 2)][0]
+                    # rpm_right = self.action_sets[int(self.action_num / 2)][1]
+                    # self.time_diff = self.action_sets[int(self.action_num / 2)][2]
+                # else:
+                #     rpm_left  = rpm_right = 0
+                #     self.time_diff = 1
+
+                rpm_left = self.action_sets[int(self.action_num)][0]
+                rpm_right = self.action_sets[int(self.action_num)][1]
+                self.time_diff = self.action_sets[int(self.action_num)][2]
 
                 # if self.action_num == 20:
                 #     self.time_diff = 1.0

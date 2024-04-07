@@ -379,6 +379,8 @@ def optimizePath(path_actions):
         else:
             optimized_path.append([action[0], action[1], 1])
             count += 1
+            if old_action == None:
+                optimized_path[0][2] = 1.25
             old_action = action
     
     return optimized_path

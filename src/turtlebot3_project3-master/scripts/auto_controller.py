@@ -6,7 +6,7 @@ from geometry_msgs.msg import Twist
 from rosgraph_msgs.msg import Clock
 import math
 
-from nonholonomic_a_star_fn import runAStar
+from nonholonomic_a_star_fn import runAStar, optimizePath
 
 class RPMControlNode(Node):
 
@@ -41,6 +41,7 @@ class RPMControlNode(Node):
         self.action_sets = []
         self.action_num = 0
         self.actual_start = False
+        self.optimize = False
         self.wheel_radius = 0.033  # wheel radius TBD
         self.robot_base = 0.287  # dist of two wheel 
         self.robot_radius = 0.220
@@ -61,10 +62,16 @@ class RPMControlNode(Node):
         sim_time = msg.clock.sec + (msg.clock.nanosec * 0.000000001)
         time_diff = sim_time - self.current_time
 
-        if time_diff >= self.time_diff and self.actual_start:
+        if self.optimize and self.action_num % 2 == 0:
+            time_check = self.action_sets[int(self.action_num / 2)][2]
+        else:
+            time_check = self.time_diff
+
+        if time_diff >= time_check and self.actual_start:
             try:
                 if self.action_num % 2 == 0:
-                    rpm_left, rpm_right = self.action_sets[int(self.action_num / 2)]
+                    rpm_left = self.action_sets[int(self.action_num / 2)][0]
+                    rpm_right = self.action_sets[int(self.action_num / 2)][1]
                 else:
                     rpm_left  = rpm_right = 0
 
@@ -94,8 +101,12 @@ def main(args=None):
     action_sets, useless = runAStar(height, width, int(node.robot_radius * 1000), int(node.clearance), int(node.robot_base * 1000), (node.wheel_radius * 1000), int(node.start_x), int(node.start_y), node.start_angle, int(node.goal_x), int(node.goal_y), node.rpm1, node.rpm2, node.scale)
     # action_sets = runAStar(2000, 6000, 220, 15, 287, 33, 500, 500, 0, 3000, 300, 50, 100, 1/5)
     action_sets.append((0, 0))
-    node.action_sets = action_sets
+
+    optimized_actions = optimizePath(action_sets)
+
+    node.action_sets = optimized_actions
     node.actual_start = True
+    node.optimize = True
 
     print("Action sets found")
 

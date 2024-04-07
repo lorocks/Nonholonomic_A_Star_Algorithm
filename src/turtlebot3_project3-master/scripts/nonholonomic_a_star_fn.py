@@ -367,3 +367,18 @@ def runAStar(unscaled_height, unscaled_width, unscaled_robot_radius, unscaled_cl
     cv2.destroyAllWindows()
 
     return path_action, path_steps
+
+def optimizePath(path_actions):
+    optimized_path = []
+    count = -1
+    old_action = None
+
+    for action in path_actions:
+        if action == old_action:
+            optimized_path[count][2] += 1
+        else:
+            optimized_path.append([action[0], action[1], 1])
+            count += 1
+            old_action = action
+    
+    return optimized_path

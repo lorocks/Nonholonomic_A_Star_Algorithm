@@ -10,11 +10,11 @@ import math
 def createGrid(height, width, bounding_location, padding = 0, wall_padding = 0, scale = 1):
   image = np.full((height, width, 3), 255, dtype=np.uint8)
 
+  # Add wall padding
   if wall_padding > 0:
-    # gotta add wall pad
     image = setWallPadding(image, wall_padding, 125)
 
-
+  # Add padding and obstacles using half planes and semi algebraic equations
   for obstacle in bounding_location:
     obstacle = np.array(obstacle, dtype=np.int32) * scale
     obstacle = obstacle.astype(np.int32)
@@ -127,6 +127,7 @@ def heuristic(node, goal):
     # return distance.euclidean(node, goal) #try
 
 
+# A* algorithm optimal path generation
 def runAStar(unscaled_height, unscaled_width, unscaled_robot_radius, unscaled_clearance, unscaled_robot_width, wheel_radius, starting_x, starting_y, starting_theta, goal_x, goal_y, rpm1, rpm2, scale):
     # Set initial variables
     start = time.time()
@@ -163,7 +164,7 @@ def runAStar(unscaled_height, unscaled_width, unscaled_robot_radius, unscaled_cl
     bigger = bigger * math.pi * wheel_radius / 60
     smaller = smaller * math.pi * wheel_radius / 60
 
-    # (left, right)
+    # (left, right) actions
     actions = [
         (0, bigger),
         (bigger, 0),
@@ -292,6 +293,7 @@ def runAStar(unscaled_height, unscaled_width, unscaled_robot_radius, unscaled_cl
             if goal_found:
                 continue
 
+            # Generate new nodes
             for i, action in enumerate(actions):
                 new_x = x_pos
                 new_y = y_pos
@@ -372,11 +374,14 @@ def runAStar(unscaled_height, unscaled_width, unscaled_robot_radius, unscaled_cl
 
     return path_action, path_steps
 
+
+# Create a more optimized path for ROS
 def optimizePath(path_actions):
     optimized_path = []
     count = -1
     old_action = None
 
+    # Combine same actions into one
     for action in path_actions:
         if action == old_action:
             optimized_path[count][2] += 1

@@ -10,11 +10,11 @@ import math
 def createGrid(height, width, bounding_location, padding = 0, wall_padding = 0, scale = 1):
   image = np.full((height, width, 3), 255, dtype=np.uint8)
 
+  # Add padding to walls
   if wall_padding > 0:
-    # gotta add wall pad
     image = setWallPadding(image, wall_padding, 125)
 
-
+  # Add padding and obstacles using half planes and semi algebraic equations
   for obstacle in bounding_location:
     obstacle = np.array(obstacle, dtype=np.int32) * scale
     obstacle = obstacle.astype(np.int32)
@@ -163,7 +163,7 @@ else:
 
 goal_threshold = robot_radius / 2
 
-# (left, right)
+# (left, right) actions
 actions = [
     (0, bigger),
     (bigger, 0),
@@ -312,6 +312,7 @@ while not open.empty():
         if goal_found:
           continue
 
+        # Generate new nodes
         for i, action in enumerate(actions):
           new_x = x_pos
           new_y = y_pos

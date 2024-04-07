@@ -8,10 +8,12 @@ import math
 
 from nonholonomic_a_star_fn import runAStar, optimizePath
 
+# Open controller node
 class RPMControlNode(Node):
 
     def __init__(self):
         super().__init__('RPM_control_node')
+        # Parameters
         self.declare_parameters(
             namespace='',
             parameters=[
@@ -27,6 +29,7 @@ class RPMControlNode(Node):
             ]
         )
 
+        # Query parameters
         self.start_x = self.get_parameter('start_x').get_parameter_value().double_value
         self.start_y = self.get_parameter('start_y').get_parameter_value().double_value
         self.start_angle = self.get_parameter('start_angle').get_parameter_value().double_value
@@ -37,6 +40,7 @@ class RPMControlNode(Node):
         self.rpm2 = self.get_parameter('rpm2').get_parameter_value().double_value
         self.scale = self.get_parameter('scale').get_parameter_value().double_value
 
+        # Set up initial variables and needed topics
         self.cmd_vel_pub = self.create_publisher(Twist, '/cmd_vel', 10)
         self.action_sets = []
         self.action_num = 0
@@ -52,12 +56,14 @@ class RPMControlNode(Node):
         self.time_diff = 1
         self.clock = self.create_subscription(Clock, 'clock', self.follow_actions, qos_profile)
 
+    # Convert rpm into Gazebo velocity
     def rpm_to_velocity(self, rpm_left, rpm_right):
         # RPM -> linear and angular speed
         linear_vel = (rpm_left + rpm_right) / (1000)
         angular_vel = (rpm_right - rpm_left) * 2 / (self.robot_base * 1000)
         return linear_vel, angular_vel
 
+    # Code execution to follow actions using Gazebo simulation time
     def follow_actions(self, msg):
         sim_time = msg.clock.sec + (msg.clock.nanosec * 0.000000001)
         time_diff = sim_time - self.current_time
@@ -91,6 +97,7 @@ class RPMControlNode(Node):
             self.action_num += 1
             self.current_time = sim_time
 
+# Main code execution
 def main(args=None):
     rclpy.init(args=args)
 
@@ -99,12 +106,15 @@ def main(args=None):
     print("Node created")
     node = RPMControlNode()
     print(node.scale, int(node.robot_radius * 1000), int(node.wheel_radius * 1000), int(node.clearance),int(node.robot_base * 1000), int(node.start_x), int(node.start_y), int(node.goal_x), int(node.goal_y), node.rpm1, node.rpm2)
+
+    # Get optimal path
     action_sets, useless = runAStar(height, width, int(node.robot_radius * 1000), int(node.clearance), int(node.robot_base * 1000), (node.wheel_radius * 1000), int(node.start_x), int(node.start_y), node.start_angle, int(node.goal_x), int(node.goal_y), node.rpm1, node.rpm2, node.scale)
 
+    # Check whether position inputs were correct
     if action_sets == False:
         print("Invalid position entered!")
         exit()
-        
+
     # action_sets = runAStar(2000, 6000, 220, 15, 287, 33, 500, 500, 0, 3000, 300, 50, 100, 1/5)
     action_sets.append((0, 0))
 
@@ -116,6 +126,7 @@ def main(args=None):
 
     print("Action sets found")
 
+    # Start node
     try:
         rclpy.spin(node)
     except:

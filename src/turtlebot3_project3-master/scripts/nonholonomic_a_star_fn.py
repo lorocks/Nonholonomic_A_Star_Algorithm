@@ -242,8 +242,9 @@ def runAStar(unscaled_height, unscaled_width, unscaled_robot_radius, unscaled_cl
 
     # Start A*
     current_pos = starting_x + (width * starting_y)
+    final_goal_pos = goal_x + (width * goal_y)
 
-    if grid[current_pos] < 0:
+    if grid[current_pos] < 0 or grid[final_goal_pos] < 0:
         return False, False
 
     initial_distance = heuristic((starting_x, starting_y), (goal_x, goal_y))

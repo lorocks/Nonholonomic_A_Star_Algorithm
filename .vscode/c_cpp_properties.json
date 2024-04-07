@@ -1,0 +1,22 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/home/lorocks/ros2/Nonholonomic_A_Star_Algorithm/install/turtlebot3_project3/include/**",
+        "/opt/ros/humble/include/**",
+        "/home/lorocks/ros2/Nonholonomic_A_Star_Algorithm/src/turtlebot3_project3-master/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}

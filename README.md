@@ -138,3 +138,17 @@ The preferred method of execution to minimise execution time is given below.
 5. Wait for Final Path Image to be Generated
 6. Launch Gazebo World
 7. Close Image to Start the Execution
+
+## Project Video
+The following video shows the grid search for starting location (1000, 500, 0) and goal location (5750, 1000)
+
+
+
+https://github.com/lorocks/Nonholonomic_A_Star_Algorithm/assets/63993526/70956eab-bad5-4c78-884d-7ff4a9173065
+
+
+
+
+https://github.com/lorocks/Nonholonomic_A_Star_Algorithm/assets/63993526/61930e07-ef5b-4c57-8e1a-1cf1e08add15
+
+Both videos have the same final positions yet the final locations differ because of ROS Gazebo simulation time not counting accurately.

@@ -16,15 +16,25 @@ https://github.com/lorocks/Nonholonomic_A_Star_Algorithm/
 
 ## Action Set
 The action set consists to 8 actions.
+
 Actions - [
+
     (0, rpm1),
+    
     (rpm1, 0),
+    
     (rpm1, rpm1),
+    
     (0, rpm2),
+    
     (rpm2, 0),
+    
     (rpm2, rpm2),
+    
     (rpm1, rpm2),
+    
     (rpm2, rpm1)
+    
 ]
 
 
@@ -67,6 +77,10 @@ After code execution takes place, a video showing the search will pop up.
 
 ## Project Video
 The following video shows the grid search for starting location (300, 1700, 0) and goal location (5750, 300)
+
+
+
+https://github.com/lorocks/Nonholonomic_A_Star_Algorithm/assets/63993526/06a29a64-eb6e-4795-8cd5-cac3d53fa5e2
 
 
 

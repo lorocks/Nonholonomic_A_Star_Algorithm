@@ -6,6 +6,11 @@ The following implementation uses A* algorithm to find the optimal path to the g
 ## GitHub Link
 https://github.com/lorocks/Nonholonomic_A_Star_Algorithm/
 
+## Team Members
+1.  Lowell Lobo, lorocks, 120095719
+2.  Wei-Li Chen, wc2023, 120378508
+
+
 ## Installing Dependencies
 ```bash
 # Install numpy

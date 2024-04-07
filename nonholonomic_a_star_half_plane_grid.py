@@ -281,7 +281,7 @@ stop_condition = 2
 
 visit_count = 0
 
-recording = False
+recording = True
 
 # Start A*
 open.put(( heuristic((starting_x, starting_y), (goal_x, goal_y)), -1, current_pos, starting_theta))
